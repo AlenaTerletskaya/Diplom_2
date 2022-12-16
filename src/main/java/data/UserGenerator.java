@@ -9,6 +9,7 @@ import java.util.Random;
 
 // Класс для генерации пользователя
 public class UserGenerator {
+
     private static Faker fakerEn = new Faker();
     private static Faker fakerRu = new Faker(Locale.forLanguageTag("ru"));
 
@@ -21,11 +22,8 @@ public class UserGenerator {
 
     // Метод возвращает курьера с уникальными данными
     public static User getUniqueUser() {
-        Random random = new Random();
-
         String name = fakerRu.name().name();
         String password = fakerEn.internet().password();
-
         return new User(getUniqueEmail(), password, name);
     }
 
@@ -140,5 +138,4 @@ public class UserGenerator {
         User changedUser = new User(user.getEmail(), user.getPassword(), newName);
         return List.of(user, changedUser);
     }
-
 }

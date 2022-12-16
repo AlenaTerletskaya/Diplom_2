@@ -29,25 +29,20 @@ public class OrderCreateWithoutTokenTest {
         @Description("Проверяет формирование заказа без передачи токена (без создания и авторизации пользователя)." +
                 "Успешный запрос возвращает код 200, имя и номер заказа, поле \"success\" = true. ")
         public void preOrderWithoutTokenCanBeCreated() {
-
             // Создаем новый заказ без токена.
             Order newOrder = OrderGenerator.getNewOrder(orderClient);
             ValidatableResponse responseOrder = orderClient.createOrderNoToken(newOrder);
-
+            int statusCode = responseOrder.extract().statusCode(); // Получаем статус-код ответа
+            boolean isOrderCreated = responseOrder.extract().path("success"); // Получаем значение поля "success"
+            String orderName = responseOrder.extract().path("name"); // Получаем имя заказа
+            int orderNumber = responseOrder.extract().path("order.number"); // Получаем номер заказа
             // Проверяем, что создание заказа прошло успешно.
-            int statusCode = responseOrder.extract().statusCode();
             Assert.assertEquals("Status code should be equal to " + SC_OK, SC_OK, statusCode);
-
             // Проверяем, что success = true.
-            boolean isOrderCreated = responseOrder.extract().path("success");
             Assert.assertTrue("Value should be equal to true", isOrderCreated);
-
             // Проверяем, чтo имя заказа не null.
-            String orderName = responseOrder.extract().path("name");
             Assert.assertNotNull("The order name should not be null" , orderName);
-
             // Проверяем, чтo номер заказа не null.
-            int orderNumber = responseOrder.extract().path("order.number");
             Assert.assertNotNull("The order number should not be null" , orderNumber);
         }
 }

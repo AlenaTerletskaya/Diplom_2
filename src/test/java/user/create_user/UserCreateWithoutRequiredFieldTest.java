@@ -37,7 +37,7 @@ public class UserCreateWithoutRequiredFieldTest {
     }
 
     // Тестовые данные
-    @Parameterized.Parameters
+    @Parameterized.Parameters (name = "Тест. данные - пользователь: {0}, статус-код: {1}, сообщение: {2}")
     public static Object[][] getTestData() {
         return new Object [][] {
                 {UserGenerator.getUserEmptyEmail(), SC_FORBIDDEN, MESSAGE},
@@ -56,17 +56,13 @@ public class UserCreateWithoutRequiredFieldTest {
             "Если одного из полей нет, запрос возвращает ошибку 403 и соответствующий текст, " +
             "поле \"success\" = false.")
     public void userCreateWithoutRequiredField_returnError() {
-
         // Создаем пользователя без обязательного поля
         ValidatableResponse responseCreate = userClient.createUser(user);
-
+        int actualStatusCode = responseCreate.extract().statusCode(); // Получаем статус-код ответа
+        String actualMessage = responseCreate.extract().path("message"); // Получаем текст сообщения
         // Проверяем статус-код, пользователь не создан.
-        int actualStatusCode = responseCreate.extract().statusCode();
         Assert.assertEquals("Status code should be equal to " + statusCode, statusCode, actualStatusCode);
-
         // Проверяем текст сообщения.
-        String actualMessage = responseCreate.extract().path("message");
         Assert.assertEquals("Message should be equal to \"" + message + "\"", message, actualMessage);
     }
-
 }

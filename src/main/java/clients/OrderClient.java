@@ -52,16 +52,6 @@ public class OrderClient extends Client {
                 .as(Ingredients.class);
     }
 
-
-// Получить заказы конкретного пользователя
-//GET https://stellarburgers.nomoreparties.site/api/orders
-//При успешном подключении бэкенд вернёт максимум 50 последних заказов
-//пользователя. Они сортируются по времени обновления.
-
-    //Сервер не возвращает поля owner : при сокет-соединении с персональной лентой
-    //заказов нужно предоставить серверу авторизационный токен.
-    //Если выполнить запрос без авторизации, вернётся код ответа 401 Unauthorized.
-
     // Метод отправляет запрос на получение заказов пользователя и возвращает ответ.
     @Step("Send GET request to receive user's orders to api/orders")
     public ValidatableResponse getOrders(String accessToken) {
@@ -73,6 +63,5 @@ public class OrderClient extends Client {
                 .then()
                 .spec(getResponseSpec());
     }
-
 }
 

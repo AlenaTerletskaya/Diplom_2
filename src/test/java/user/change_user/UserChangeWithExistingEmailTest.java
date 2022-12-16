@@ -25,13 +25,11 @@ public class UserChangeWithExistingEmailTest {
 
     @Before
     public void setUp() {
-
         userClient = new UserClient();
     }
 
     @After
     public void cleanUp() {
-
         userClient.deleteUser(accessToken1);
         userClient.deleteUser(accessToken2);
     }
@@ -42,35 +40,30 @@ public class UserChangeWithExistingEmailTest {
     @Description("Проверяет, что нельзя изменить емейл пользователя на уже зарегистрированный емейл. " +
             "Запрос возвращает ошибку 403 и соответствующий текст, поле \"success\" = false.")
     public void userEmailCanNotBeChangedToExistingEmail() {
-
         // Создаем двух пользователей
         User user1 = UserGenerator.getUniqueUser();
         userClient.createUser(user1);
         User user2 = UserGenerator.getUniqueUser();
         accessToken2 = userClient.createUser(user2).extract().path("accessToken");
-
-        // Авторизуемся под пользователем1. Проверяем, что авторизация прошла успешно.
+        // Авторизуемся под пользователем1.
         ValidatableResponse responseLogin = userClient.loginUser(Credentials.from(user1));
         accessToken1 = responseLogin.extract().path("accessToken");
-        Assert.assertEquals("Login status code should be equal to " + SC_OK,
-                SC_OK, responseLogin.extract().statusCode());
-
         // Меняем email пользователя1 на email пользователя2.
         ValidatableResponse responseChange = userClient.changeUser(
                 new User(user2.getEmail(), user1.getPassword(), user1.getName()), accessToken1);
-
+        int actualStatusCode = responseChange.extract().statusCode(); // Получаем статус-код ответа
+        boolean isUserChanged = responseChange.extract().path("success"); // Получаем значение поля "success"
+        String actualMessage = responseChange.extract().path("message"); // Получаем текст сообщения
+        String message = "User with such email already exists"; // Ожидаемое сообщение
+        // Проверяем, что авторизация пользователя1 прошла успешно.
+        Assert.assertEquals("Login status code should be equal to " + SC_OK,
+                SC_OK, responseLogin.extract().statusCode());
         // Проверяем, что изменение данных пользователя не произошло.
-        int actualStatusCode = responseChange.extract().statusCode();
         Assert.assertEquals("Change status code should be equal to " + SC_FORBIDDEN,
                 SC_FORBIDDEN, actualStatusCode);
-
         // Проверяем, что success = false.
-        boolean isUserChanged = responseChange.extract().path("success");
         Assert.assertFalse("Success value should be equal to false.", isUserChanged);
-
         // Проверяем текст сообщения.
-        String actualMessage = responseChange.extract().path("message");
-        String message = "User with such email already exists";
         Assert.assertEquals("Message should be equal to \"" + message + "\"", message, actualMessage);
     }
 }

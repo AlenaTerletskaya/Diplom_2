@@ -9,6 +9,7 @@ import io.restassured.specification.ResponseSpecification;
 
 // Класс для формирования настроек запроса
 public class Client {
+
     private static final String BASE_URL = "https://stellarburgers.nomoreparties.site/";
 
     // Метод возвращает спецификацию (настройки) запроса
@@ -26,5 +27,4 @@ public class Client {
                 .log(LogDetail.ALL)
                 .build();
     }
-
 }

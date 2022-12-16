@@ -47,7 +47,7 @@ public class UnauthorizedUserChangeTest {
     }
 
     // Тестовые данные
-    @Parameterized.Parameters
+    @Parameterized.Parameters (name = "Тест. данные - пользователи: {0}, статус-код: {1}, сообщение: {2}")
     public static Object[][] getTestData() {
         return new Object [][] {
                 {UserGenerator.getUserChangeEmail(), SC_UNAUTHORIZED, MESSAGE},
@@ -63,30 +63,23 @@ public class UnauthorizedUserChangeTest {
             "Если пользователь не авторизован, запрос возвращает ошибку 401 и соответствующий текст, " +
             "поле \"success\" = false. Авторизоваться под новыми данными нельзя.")
     public void unauthorizedUserCanNotBeChanged() {
-
         // Создаем пользователя
         ValidatableResponse responseCreate = userClient.createUser(users.get(0));
         accessToken = responseCreate.extract().path("accessToken");
-
         // Меняем данные пользователя
         ValidatableResponse responseChange = userClient.changeUser(users.get(1), accessToken);
-
+        int actualStatusCode = responseChange.extract().statusCode(); // Получаем статус-код ответа
+        boolean isUserChanged = responseChange.extract().path("success"); // Получаем значение поля "success"
+        String actualMessage = responseChange.extract().path("message"); // Получаем текст сообщения
         // Пытаемся авторизоваться под новыми данными.
         ValidatableResponse responseNewLogin = userClient.loginUser(Credentials.from(users.get(1)));
-
         // Проверяем, что изменение данных пользователя не произошло.
-        int actualStatusCode = responseChange.extract().statusCode();
         Assert.assertEquals("An unauthorized user should not be changed. " +
                 "Change status code should be equal to " + statusCode, statusCode, actualStatusCode);
-
         // Проверяем, что success = false.
-        boolean isUserChanged = responseChange.extract().path("success");
         Assert.assertFalse("Success value should be equal to false.", isUserChanged);
-
         // Проверяем текст сообщения.
-        String actualMessage = responseChange.extract().path("message");
         Assert.assertEquals("Message should be equal to \"" + message + "\"", message, actualMessage);
-
         // Проверяем, что под новыми данными нельзя авторизоваться.
         Assert.assertEquals("Login with new data status code should be equal to " + SC_UNAUTHORIZED,
                 SC_UNAUTHORIZED, responseNewLogin.extract().statusCode());

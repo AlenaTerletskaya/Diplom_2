@@ -33,7 +33,6 @@ public class OrderCreateTest {
     public void setUp() {
         userClient = new UserClient();
         orderClient = new OrderClient();
-
         // Создаем пользователя
         user = UserGenerator.getUniqueUser();
         ValidatableResponse responseCreate = userClient.createUser(user);
@@ -52,35 +51,29 @@ public class OrderCreateTest {
             "Успешный запрос возвращает код 200 и json. Поле \"success\" = true. " +
             "Id заказа не null. Имя и емейл заказчика совпадают с данными пользователя.")
     public void authUserCanCreateOrderWithIngr() {
-
-        // Авторизуемся под пользователем. Проверяем, что авторизация прошла успешно.
+        // Авторизуемся под пользователем.
         ValidatableResponse responseLogin = userClient.loginUser(Credentials.from(user));
         accessToken = responseLogin.extract().path("accessToken");
-        Assert.assertEquals("Login status code should be equal to " + SC_OK,
-                SC_OK, responseLogin.extract().statusCode());
-
         // Создаем новый заказ, используя токен авторизованного пользователя.
         Order newOrder = OrderGenerator.getNewOrder(orderClient);
         ValidatableResponse responseOrder = orderClient.createOrderWithToken(newOrder, accessToken);
-
+        int statusCode = responseOrder.extract().statusCode(); // Получаем статус-код ответа
+        boolean isOrderCreated = responseOrder.extract().path("success"); // Получаем значение поля "success"
+        String orderId = responseOrder.extract().path("order._id"); // Получаем значение id заказа
+        String ownerName = responseOrder.extract().path("order.owner.name"); // Получаем имя заказчика
+        String ownerEmail = responseOrder.extract().path("order.owner.email"); // Получаем емейл заказчика
+        // Проверяем, что авторизация прошла успешно.
+        Assert.assertEquals("Login status code should be equal to " + SC_OK,
+                SC_OK, responseLogin.extract().statusCode());
         // Проверяем, что создание заказа прошло успешно.
-        int statusCode = responseOrder.extract().statusCode();
         Assert.assertEquals("Status code should be equal to " + SC_OK, SC_OK, statusCode);
-
         // Проверяем, что success = true.
-        boolean isOrderCreated = responseOrder.extract().path("success");
         Assert.assertTrue("Value should be equal to true", isOrderCreated);
-
         // Проверяем, чтo id заказа не null.
-        String orderId = responseOrder.extract().path("order._id");
         Assert.assertNotNull("The order id should not be null" , orderId);
-
         // Проверяем, чтo имя заказчика совпадает с именем пользователя.
-        String ownerName = responseOrder.extract().path("order.owner.name");
         Assert.assertEquals("Owner name should be equal to " + user.getName(), user.getName(), ownerName);
-
         // Проверяем, чтo емейл заказчика совпадает с емейлом пользователя.
-        String ownerEmail = responseOrder.extract().path("order.owner.email");
         Assert.assertEquals("Owner email should be equal to " + user.getEmail(), user.getEmail(), ownerEmail);
     }
 
@@ -90,11 +83,9 @@ public class OrderCreateTest {
     @Description("Проверяет, что неавторизованный пользователь не может создать заказ. " +
             "Если пользователь не авторизован, запрос возвращает код ответа 401.")
     public void unauthUserCanNotCreateOrder() {
-
         // Создаем новый заказ, используя токен неавторизованного пользователя.
         Order newOrder = OrderGenerator.getNewOrder(orderClient);
         ValidatableResponse responseOrder = orderClient.createOrderWithToken(newOrder, accessToken);
-
         // Проверяем, что заказ не создан. Статус-код ответа = 401.
         int statusCode = responseOrder.extract().statusCode();
         Assert.assertEquals("An unauthorized user should not create an order. " +
@@ -107,29 +98,25 @@ public class OrderCreateTest {
     @Description("Проверяет, что если в запросе по созданию заказа передан невалидный ингредиент, " +
             "вернётся код ответа 400 и соответствующий текст, поле \"success\" = false. ")
     public void createOrderWithInvalidIngredient() {
-
-        // Авторизуемся под пользователем. Проверяем, что авторизация прошла успешно.
+        // Авторизуемся под пользователем.
         ValidatableResponse responseLogin = userClient.loginUser(Credentials.from(user));
         accessToken = responseLogin.extract().path("accessToken");
-        Assert.assertEquals("Login status code should be equal to " + SC_OK,
-                SC_OK, responseLogin.extract().statusCode());
-
         // Создаем новый заказ с невалидным ингредиентом.
         Order OrderWithInvalidIngr = OrderGenerator.getOrderWithInvalidIngr(orderClient);
         ValidatableResponse responseOrder = orderClient.createOrderWithToken(OrderWithInvalidIngr, accessToken);
-
+        int statusCode = responseOrder.extract().statusCode(); // Получаем статус-код ответа
+        boolean isOrderCreated = responseOrder.extract().path("success"); // Получаем значение поля "success"
+        String actualMessage = responseOrder.extract().path("message"); // Получаем текст сообщения
+        String message = "One or more ids provided are incorrect"; // Ожидаемое сообщение
+        // Проверяем, что авторизация прошла успешно.
+        Assert.assertEquals("Login status code should be equal to " + SC_OK,
+                SC_OK, responseLogin.extract().statusCode());
         // Проверяем, что заказ не создан. Статус-код = 400.
-        int statusCode = responseOrder.extract().statusCode();
         Assert.assertEquals("You can not create an order with invalid ingredient. " +
                 "Status code should be equal to " + SC_BAD_REQUEST, SC_BAD_REQUEST, statusCode);
-
         // Проверяем, что success = false.
-        boolean isOrderCreated = responseOrder.extract().path("success");
         Assert.assertFalse("Success value should be equal to false.", isOrderCreated);
-
         // Проверяем текст сообщения.
-        String actualMessage = responseOrder.extract().path("message");
-        String message = "One or more ids provided are incorrect";
         Assert.assertEquals("Message should be equal to \"" + message + "\"", message, actualMessage);
     }
 
@@ -139,30 +126,25 @@ public class OrderCreateTest {
     @Description("Проверяет, что запрос по созданию заказа без ингредиентов " +
             "возвращает код ответа 400 и соответствующий текст, поле \"success\" = false. ")
     public void createOrderWithoutIngredients() {
-
-        // Авторизуемся под пользователем. Проверяем, что авторизация прошла успешно.
+        // Авторизуемся под пользователем.
         ValidatableResponse responseLogin = userClient.loginUser(Credentials.from(user));
         accessToken = responseLogin.extract().path("accessToken");
-        Assert.assertEquals("Login status code should be equal to " + SC_OK,
-                SC_OK, responseLogin.extract().statusCode());
-
         // Создаем новый заказ без ингредиентов.
         Order OrderWithoutIngrs = OrderGenerator.getOrderWithoutIngredients();
         ValidatableResponse responseOrder = orderClient.createOrderWithToken(OrderWithoutIngrs, accessToken);
-
+        int statusCode = responseOrder.extract().statusCode(); // Получаем статус-код ответа
+        boolean isOrderCreated = responseOrder.extract().path("success"); // Получаем значение поля "success"
+        String actualMessage = responseOrder.extract().path("message"); // Получаем текст сообщения
+        String message = "Ingredient ids must be provided"; // Ожидаемое сообщение
+        // Проверяем, что авторизация прошла успешно.
+        Assert.assertEquals("Login status code should be equal to " + SC_OK,
+                SC_OK, responseLogin.extract().statusCode());
         // Проверяем, что заказ не создан. Статус-код = 400.
-        int statusCode = responseOrder.extract().statusCode();
         Assert.assertEquals("You can not create an order with invalid ingredient. " +
                 "Status code should be equal to " + SC_BAD_REQUEST, SC_BAD_REQUEST, statusCode);
-
         // Проверяем, что success = false.
-        boolean isOrderCreated = responseOrder.extract().path("success");
         Assert.assertFalse("Success value should be equal to false.", isOrderCreated);
-
         // Проверяем текст сообщения.
-        String actualMessage = responseOrder.extract().path("message");
-        String message = "Ingredient ids must be provided";
         Assert.assertEquals("Message should be equal to \"" + message + "\"", message, actualMessage);
     }
-
 }

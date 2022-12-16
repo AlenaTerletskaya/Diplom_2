@@ -10,6 +10,7 @@ import static io.restassured.RestAssured.given;
 
 // Класс-клиент для отправки запросов к эндпойнтам по действиям с пользователем.
 public class UserClient extends Client {
+
     private static final String PATH_CREATE = "api/auth/register";
     private static final String PATH_LOGIN = "api/auth/login";
     private static final String PATH_CHANGE_DELETE = "api/auth/user";
@@ -75,5 +76,4 @@ public class UserClient extends Client {
                 .then()
                 .spec(getResponseSpec());
     }
-
 }

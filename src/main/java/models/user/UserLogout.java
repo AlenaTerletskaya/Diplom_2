@@ -11,5 +11,4 @@ import lombok.Setter;
 public class UserLogout {
 
     private String token;
-
 }

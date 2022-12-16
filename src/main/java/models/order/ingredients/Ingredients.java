@@ -14,5 +14,4 @@ public class Ingredients {
 
     private boolean success;
     private List<Ingredient> data;
-
 }

@@ -22,6 +22,7 @@ import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 // Класс с параметризованным тестом по авторизации пользователя с неправильными/ отсутствующими полями
 @RunWith(Parameterized.class)
 public class UserLoginInvalidEmailOrPasswordTest {
+
     private UserClient userClient;
     private List<User> users;
     private int statusCode;
@@ -43,11 +44,10 @@ public class UserLoginInvalidEmailOrPasswordTest {
     @After
     public void cleanUp() {
         userClient.deleteUser(accessToken);
-
     }
 
     // Тестовые данные
-    @Parameterized.Parameters
+    @Parameterized.Parameters (name = "Тест. данные - пользователи: {0}, статус-код: {1}, сообщение: {2}")
     public static Object[][] getTestData() {
         return new Object [][] {
                 {UserGenerator.getUserListEmptyLogin(), SC_UNAUTHORIZED, MESSAGE},
@@ -66,20 +66,16 @@ public class UserLoginInvalidEmailOrPasswordTest {
             "Если одного из полей нет или данные в поле не верные, " +
             "запрос возвращает ошибку 401 и соответствующий текст, поле \"success\" = false.")
     public void userLoginInvalidFieldOrNoField_returnError() {
-
         // Создаем пользователя
         ValidatableResponse responseCreate = userClient.createUser(users.get(0));
         accessToken = responseCreate.extract().path("accessToken");
-
         // Авторизуемся под пользователем без обязательного поля / с неверным полем.
         ValidatableResponse responseWrongLogin = userClient.loginUser(Credentials.from(users.get(1)));
-
+        int actualStatusCode = responseWrongLogin.extract().statusCode(); // Получаем статус-код ответа
+        String actualMessage = responseWrongLogin.extract().path("message"); // Получаем текст сообщения
         // Проверяем статус-код, пользователь не авторизован.
-        int actualStatusCode = responseWrongLogin.extract().statusCode();
         Assert.assertEquals("Status code should be equal to " + statusCode, statusCode, actualStatusCode);
-
         // Проверяем текст сообщения.
-        String actualMessage = responseWrongLogin.extract().path("message");
         Assert.assertEquals("Message should be equal to \"" + message + "\"", message, actualMessage);
     }
 }

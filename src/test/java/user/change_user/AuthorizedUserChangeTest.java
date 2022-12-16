@@ -44,7 +44,7 @@ public class AuthorizedUserChangeTest {
     }
 
     // Тестовые данные
-    @Parameterized.Parameters
+    @Parameterized.Parameters (name = "Тест. данные - пользователи: {0}, статус-код: {1} ")
     public static Object[][] getTestData() {
         return new Object [][] {
                 {UserGenerator.getUserChangeEmail(), SC_OK},
@@ -61,41 +61,34 @@ public class AuthorizedUserChangeTest {
             "Значение измененного поля соответствует переданному в запросе." +
             "Под новыми данными можно авторизоваться.")
     public void authorizedUserCanBeChanged() {
-
         // Создаем пользователя
-        ValidatableResponse responseCreate = userClient.createUser(users.get(0));
-
-        // Авторизуемся под пользователем. Проверяем, что авторизация прошла успешно.
+        userClient.createUser(users.get(0));
+        // Авторизуемся под пользователем.
         ValidatableResponse responseLogin = userClient.loginUser(Credentials.from(users.get(0)));
         accessToken = responseLogin.extract().path("accessToken");
-        Assert.assertEquals("Login status code should be equal to " + SC_OK,
-                SC_OK, responseLogin.extract().statusCode());
-
         // Меняем данные пользователя
         ValidatableResponse responseChange = userClient.changeUser(users.get(1), accessToken);
-
-        // Проверяем, что изменение данных пользователя прошло успешно.
-        int actualStatusCode = responseChange.extract().statusCode();
-        Assert.assertEquals("Change status code should be equal to " + statusCode, statusCode, actualStatusCode);
-
-        // Проверяем, что success = true.
-        boolean isUserChanged = responseChange.extract().path("success");
-        Assert.assertTrue("Success value should be equal to true.", isUserChanged);
-
-        // Проверяем, что емейл соответствует новым данным.
-        String email = responseChange.extract().path("user.email");
-        String newEmail = users.get(1).getEmail();
-        Assert.assertEquals("Email should be equal to " + newEmail, newEmail, email);
-
-        // Проверяем, что имя соответствует новым данным.
-        String name = responseChange.extract().path("user.name");
-        String newName = users.get(1).getName();
-        Assert.assertEquals("Name should be equal to \"" + newName + "\"", newName, name);
-
-        // Проверяем, что под новыми данными можно авторизоваться.
+        int actualStatusCode = responseChange.extract().statusCode(); // Получаем статус-код ответа
+        boolean isUserChanged = responseChange.extract().path("success"); // Получаем значение поля "success"
+        String email = responseChange.extract().path("user.email"); // Получаем емейл из ответа
+        String newEmail = users.get(1).getEmail(); // Получаем емейл из новых данных
+        String name = responseChange.extract().path("user.name"); // Получаем имя из ответа
+        String newName = users.get(1).getName(); // Получаем имя из новых данных
+        // Авторизуемся под новыми данными
         ValidatableResponse responseNewLogin = userClient.loginUser(Credentials.from(users.get(1)));
+        // Проверяем, что авторизация прошла успешно.
+        Assert.assertEquals("Login status code should be equal to " + SC_OK,
+                SC_OK, responseLogin.extract().statusCode());
+        // Проверяем, что изменение данных пользователя прошло успешно.
+        Assert.assertEquals("Change status code should be equal to " + statusCode, statusCode, actualStatusCode);
+        // Проверяем, что success = true.
+        Assert.assertTrue("Success value should be equal to true.", isUserChanged);
+        // Проверяем, что емейл соответствует новым данным.
+        Assert.assertEquals("Email should be equal to " + newEmail, newEmail, email);
+        // Проверяем, что имя соответствует новым данным.
+        Assert.assertEquals("Name should be equal to \"" + newName + "\"", newName, name);
+        // Проверяем, что под новыми данными можно авторизоваться.
         Assert.assertEquals("Login with new data status code should be equal to " + SC_OK,
                 SC_OK, responseNewLogin.extract().statusCode());
     }
-
 }
